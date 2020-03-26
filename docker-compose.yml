@@ -1,0 +1,99 @@
+version: "3.7"
+
+services:
+  back:
+    # image: binomio/gbpd-back:dev
+    domainname: api.gbpd.es
+    container_name: gbpd-api
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+        max-file: "10"
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        MONGODB_URI: mongodb://gbpd:$MONGO_DB_ADMIN_PASSWORD@mongo:27017/dev
+    # environment:
+    #   MONGODB_URI: mongodb://gbpd:$MONGO_DB_ADMIN_PASSWORD@mongo:27017/admin
+      # - ATLAS_HOST=mongodb://mongo:27017/dev
+    networks:
+      gbpd:
+    ports:
+      - 3008:3008
+    links:
+      - mongo
+    depends_on:
+      - mongo
+
+  front:
+    # image: binomio/gbpd-front:dev
+    domainname: gbpd.es
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+        max-file: "10"
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        REACT_APP_API_URL: $REACT_APP_API_URL
+    container_name: gbpd
+    # environment:
+    #   REACT_APP_API_URL: http://localhost:3008
+    depends_on:
+      - back
+    networks:
+      gbpd:
+    expose:
+      - 3000
+    ports:
+      - 3000:3000
+    links:
+      - back
+
+  mongo:
+    container_name: mongodb
+    # command: --wiredTigerCacheSizeGB 0.1
+    # command: mongo dev --host localhost -u gbpd -p ar12003 --authenticationDatabase dev
+    image: mongo:3
+    # build:
+    #   context: ./mongo
+    #   dockerfile: Dockerfile
+    restart: always
+    volumes:
+      - mongo:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: gbpd
+      MONGO_INITDB_ROOT_PASSWORD: edec408fac172f177696b9e97a6e1be6447d0bbe
+      MONGO_INITDB_DATABASE: dev
+    networks:
+      gbpd:
+    ports:
+    - 27017:27017
+
+  mongo-express:
+    container_name: mongo-express
+    image: mongo-express
+    restart: always
+    ports:
+      - 8081:8081
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: gbpd
+      ME_CONFIG_MONGODB_ADMINPASSWORD: edec408fac172f177696b9e97a6e1be6447d0bbe
+      ME_CONFIG_MONGODB_ENABLE_ADMIN: "true"
+    networks:
+      gbpd:
+    depends_on:
+      - mongo
+
+networks:
+  gbpd:
+    name: gbpd
+    driver: bridge
+
+volumes:
+  mongo:
+    name: mongo

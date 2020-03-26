@@ -1,0 +1,20 @@
+{
+  "name": "salvamento",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "docker-compose  up -d --force-recreate",
+    "restart": "npm stop && npm start",
+    "stop": "docker-compose down",
+    "reset": "docker-compose down --rmi all",
+    "build": "docker-compose up --build",
+    "remove:db": "docker volume rm mongo",
+    "build:mongo": "docker build -t binomio/mongo ./mongo --force-rm --pull",
+    "build:front": "docker build -t binomio/front ./frontend --force-rm --pull",
+    "build:back": "docker build -t binomio/back ./backend --force-rm --pull"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
