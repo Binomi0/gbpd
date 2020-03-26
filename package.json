@@ -10,9 +10,9 @@
     "reset": "docker-compose down --rmi all",
     "build": "docker-compose up --build",
     "remove:db": "docker volume rm mongo",
-    "build:mongo": "docker build -t binomio/mongo ./mongo --force-rm --pull",
-    "build:front": "docker build -t binomio/front ./frontend --force-rm --pull",
-    "build:back": "docker build -t binomio/back ./backend --force-rm --pull"
+    "build:mongo": "docker build -t binomio/gbpd-mongo:dev ./mongo",
+    "build:front": "docker build -t binomio/gbpd-front:dev ./frontend --build-arg REACT_APP_API_URL=http://localhost:3008",
+    "build:back": "docker build -t binomio/gbpd-back:dev ./backend --build-arg MONGO_DB_ADMIN_PASSWORD=edec408fac172f177696b9e97a6e1be6447d0bbe"
   },
   "keywords": [],
   "author": "",
