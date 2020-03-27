@@ -4,15 +4,14 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "docker-compose  up -d --force-recreate",
-    "restart": "npm stop && npm start",
-    "stop": "docker-compose down",
+    "build": "docker-compose up -d --force-recreate --build",
+    "build:mongo": "docker-compose build mongo",
+    "build:front": "docker-compose build front",
+    "build:back": "docker-compose build back",
     "reset": "docker-compose down --rmi all",
-    "build": "docker-compose up --build",
-    "remove:db": "docker volume rm mongo",
-    "build:mongo": "docker build -t binomio/gbpd-mongo:dev ./mongo",
-    "build:front": "docker build -t binomio/gbpd-front:dev ./frontend --build-arg REACT_APP_API_URL=http://localhost:3008",
-    "build:back": "docker build -t binomio/gbpd-back:dev ./backend --build-arg MONGO_DB_ADMIN_PASSWORD=edec408fac172f177696b9e97a6e1be6447d0bbe"
+    "restart": "npm stop && npm start",
+    "start": "docker-compose up -d --force-recreate",
+    "stop": "docker-compose down -v"
   },
   "keywords": [],
   "author": "",

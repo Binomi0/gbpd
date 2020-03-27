@@ -1,9 +1,18 @@
 version: "3.7"
 
+networks:
+  internal:
+    # name: gbpd
+    driver: bridge
+
+volumes:
+  mongo:
+    # name: mongo
+
 services:
   back:
-    image: binomio/gbpd-back
-    domainname: api.gbpd.es
+    image: binomio/gbpd-back:dev
+    # domainname: api.gbpd.es
     container_name: gbpd-api
     logging:
       driver: "json-file"
@@ -14,12 +23,12 @@ services:
       context: ./backend
       dockerfile: Dockerfile
       args:
-        MONGODB_URI: mongodb://gbpd:$MONGO_DB_ADMIN_PASSWORD@mongo:27017/dev
+        MONGODB_URI: mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongo:27017/develop
     # environment:
-    #   MONGODB_URI: mongodb://gbpd:$MONGO_DB_ADMIN_PASSWORD@mongo:27017/dev
+    #   MONGODB_URI: mongodb://internal:$MONGO_DB_ADMIN_PASSWORD@mongo:27017/dev
       # - ATLAS_HOST=mongodb://mongo:27017/dev
     networks:
-      gbpd:
+      internal:
     ports:
       - 3008:3008
     links:
@@ -28,8 +37,8 @@ services:
       - mongo
 
   front:
-    image: binomio/gbpd-front
-    domainname: gbpd.es
+    image: binomio/gbpd-front:dev
+    # domainname: gbpd.es
     logging:
       driver: "json-file"
       options:
@@ -39,14 +48,14 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        REACT_APP_API_URL: $REACT_APP_API_URL
+        REACT_APP_API_URL: ${REACT_APP_API_URL}
     container_name: gbpd
     # environment:
     #   REACT_APP_API_URL: $REACT_APP_API_URL
     depends_on:
       - back
     networks:
-      gbpd:
+      internal:
     expose:
       - 3000
     ports:
@@ -56,23 +65,30 @@ services:
 
   mongo:
     container_name: mongodb
+    image: binomio/mongo
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+      MONGO_INITDB_DATABASE: dev
+      MONGO_INITDB_USERNAME: ${MONGO_INITDB_USERNAME}
+      MONGO_INITDB_PASSWORD: ${MONGO_INITDB_PASSWORD}
+    volumes:
+      # - mongo:/data/db
+      # - ./db-init/:/docker-entrypoint-initdb.d
+      - ./mongo/config/mongod.conf:/etc/mongod.conf
+      - ./mongo/config/initdb.d/:/docker-entrypoint-initdb.d/
+      - ./mongo/config/data/db/:/data/db/
+      - ./mongo/config/data/log/:/var/log/mongodb/
+    networks:
+      internal:
+    ports:
+    - 27017:27017
+    command: ["-f", "/etc/mongod.conf"]
     # command: --wiredTigerCacheSizeGB 0.1
-    command: -u {MONGO_DB_ADMIN_USER} -p {MONGO_DB_ADMIN_PASSWORD} --authenticationDatabase dev
-    image: binomio/gbpd-mongo
     build:
       context: ./mongo
       dockerfile: Dockerfile
-    restart: always
-    volumes:
-      - mongo:/data/db
-    # environment:
-    #   MONGO_INITDB_ROOT_USERNAME: gbpd
-    #   MONGO_INITDB_ROOT_PASSWORD: edec408fac172f177696b9e97a6e1be6447d0bbe
-    #   MONGO_INITDB_DATABASE: dev
-    networks:
-      gbpd:
-    ports:
-    - 27017:27017
 
   mongo-express:
     container_name: mongo-express
@@ -81,19 +97,10 @@ services:
     ports:
       - 8081:8081
     environment:
-      ME_CONFIG_MONGODB_ADMINUSERNAME: gbpd
-      ME_CONFIG_MONGODB_ADMINPASSWORD: edec408fac172f177696b9e97a6e1be6447d0bbe
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
       ME_CONFIG_MONGODB_ENABLE_ADMIN: "true"
     networks:
-      gbpd:
+      internal:
     depends_on:
       - mongo
-
-networks:
-  gbpd:
-    name: gbpd
-    driver: bridge
-
-volumes:
-  mongo:
-    name: mongo

@@ -1,7 +1,17 @@
-FROM mongo:3
+FROM mongo
 
 WORKDIR /data/db
 
-COPY init-mongo.js /docker-entrypoint-initdb.d/init-mongo.js
+# ARG MONGO_DB_ADMIN_USER
+# ARG MONGO_DB_ADMIN_PASSWORD
+# ARG DB
+# ARG MONGO_USERNAME
+
+# RUN echo $MONGO_USERNAME
+# RUN echo "MONGO_DB_ADMIN_PASSWORD:${MONGO_DB_ADMIN_PASSWORD}"
+
+# COPY ./config/mongo/mongo.js /docker-entrypoint-initdb.d/init-mongo.js
+# COPY init-mongo.sh /docker-entrypoint-initdb.d/init-mongo.sh
+
 
 CMD ["mongo"]
