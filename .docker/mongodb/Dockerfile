@@ -2,6 +2,8 @@ FROM binomio/mongo
 
 WORKDIR /data/db
 
+RUN echo "Dockerfile"
+
 # ARG MONGO_DB_ADMIN_USER
 # ARG MONGO_DB_ADMIN_PASSWORD
 # ARG DB

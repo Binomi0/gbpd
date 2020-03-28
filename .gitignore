@@ -2,6 +2,7 @@
 frontend/
 backend/
 
-.docker/mongodb/data/
-.docker/rabbitmq/data/
-.docker/rabbitmq/logs/
+
+.docker/rabbitmq/
+.docker/rabbitmq/
+.docker/rabbitmq/

@@ -11,6 +11,5 @@ WORKDIR /data/db
 # RUN echo "MONGO_DB_ADMIN_PASSWORD:${MONGO_DB_ADMIN_PASSWORD}"
 
 # COPY ./config/mongo/mongo.js /docker-entrypoint-initdb.d/init-mongo.js
-COPY ./mongokey /data/db/mongokey
 
 CMD ["mongo"]
