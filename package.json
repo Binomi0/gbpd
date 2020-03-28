@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "docker-compose up -d --force-recreate --build",
-    "build:mongo": "docker-compose build mongo",
+    "build:mongo": "docker-compose build mongo && docker-compose build mongo2 && docker-compose build mongo3",
     "build:front": "docker-compose build front",
     "build:back": "docker-compose build back",
     "build:rabbit": "docker-compose build rabbitmq",

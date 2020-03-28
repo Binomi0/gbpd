@@ -23,7 +23,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile
       args:
-        MONGODB_URI: mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongo:27017/admin?retryWrites=true&w=majority
+        MONGODB_URI: mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongo:27017,mongo2:27017,mongo3:27017/admin?retryWrites=true&w=majority
     # environment:
     #   MONGODB_URI: mongodb://internal:$MONGO_DB_ADMIN_PASSWORD@mongo:27017/dev
       # - ATLAS_HOST=mongodb://mongo:27017/dev
@@ -64,6 +64,7 @@ services:
       - back
 
   mongo:
+    hostname: mongo
     container_name: mongodb
     image: binomio/mongo
     restart: always
@@ -75,18 +76,82 @@ services:
       MONGO_INITDB_PASSWORD: ${MONGO_INITDB_PASSWORD}
     volumes:
       # - mongo:/data/db
-      # - ./db-init/:/docker-entrypoint-initdb.d
+    #   # - ./db-init/:/docker-entrypoint-initdb.d
       - ./.docker/mongodb/mongod.conf:/etc/mongod.conf
       - ./.docker/mongodb/initdb.d/:/docker-entrypoint-initdb.d/
       - ./.docker/mongodb/data/db/:/data/db/
       - ./.docker/mongodb/data/log/:/var/log/mongodb/
     networks:
       internal:
+    expose:
+      - 27017
     ports:
-    - 27017:27017
-    command: ["-f", "/etc/mongod.conf"]
+    - 27011:27017
+    command: ["-f", "/etc/mongod.conf", "--replSet", "${MONGO_REPLICA_SET_NAME}", "--bind_ip_all", "--keyFile", "mongokey"]
     build:
-      context: ./mongo
+      context: ./mongo/replica1
+      dockerfile: Dockerfile
+    healthcheck:
+      test: test $$(echo "rs.initiate().ok || rs.status().ok" | mongo -u $${MONGO_INITDB_ROOT_USERNAME} -p $${MONGO_INITDB_ROOT_PASSWORD} --quiet) -eq 1
+      interval: 10s
+      start_period: 30s
+
+  mongo2:
+    hostname: mongo2
+    container_name: mongodb2
+    image: binomio/mongo
+    restart: always
+    expose:
+      - 27017
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE}
+      MONGO_INITDB_USERNAME: ${MONGO_INITDB_USERNAME}
+      MONGO_INITDB_PASSWORD: ${MONGO_INITDB_PASSWORD}
+    volumes:
+      # - mongo:/data/db
+    #   # - ./db-init/:/docker-entrypoint-initdb.d
+      - ./.docker/mongodb2/mongod.conf:/etc/mongod.conf
+      - ./.docker/mongodb2/initdb.d/:/docker-entrypoint-initdb.d/
+      - ./.docker/mongodb2/data/db/:/data/db/
+      - ./.docker/mongodb2/data/log/:/var/log/mongodb/
+    networks:
+      internal:
+    ports:
+    - 27012:27017
+    command: ["-f", "/etc/mongod.conf", "--replSet", "${MONGO_REPLICA_SET_NAME}", "--bind_ip_all", "--keyFile", "mongokey"]
+    build:
+      context: ./mongo/replica2
+      dockerfile: Dockerfile
+
+  mongo3:
+    hostname: mongo3
+    container_name: mongodb3
+    image: binomio/mongo
+    restart: always
+    expose:
+      - 27017
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE}
+      MONGO_INITDB_USERNAME: ${MONGO_INITDB_USERNAME}
+      MONGO_INITDB_PASSWORD: ${MONGO_INITDB_PASSWORD}
+    volumes:
+      # - mongo:/data/db
+    #   # - ./db-init/:/docker-entrypoint-initdb.d
+      - ./.docker/mongodb3/mongod.conf:/etc/mongod.conf
+      - ./.docker/mongodb3/initdb.d/:/docker-entrypoint-initdb.d/
+      - ./.docker/mongodb3/data/db/:/data/db/
+      - ./.docker/mongodb3/data/log/:/var/log/mongodb/
+    networks:
+      internal:
+    ports:
+    - 27013:27017
+    command: ["-f", "/etc/mongod.conf", "--replSet", "${MONGO_REPLICA_SET_NAME}", "--bind_ip_all", "--keyFile", "mongokey"]
+    build:
+      context: ./mongo/replica3
       dockerfile: Dockerfile
 
   mongo-express:
