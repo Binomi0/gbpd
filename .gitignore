@@ -1,3 +1,7 @@
 .env
 frontend/
 backend/
+
+.docker/mongodb/data/
+.docker/rabbitmq/data/
+.docker/rabbitmq/logs/

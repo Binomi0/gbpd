@@ -23,7 +23,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile
       args:
-        MONGODB_URI: mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongo:27017/develop
+        MONGODB_URI: mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongo:27017/admin?retryWrites=true&w=majority
     # environment:
     #   MONGODB_URI: mongodb://internal:$MONGO_DB_ADMIN_PASSWORD@mongo:27017/dev
       # - ATLAS_HOST=mongodb://mongo:27017/dev
@@ -70,22 +70,21 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
-      MONGO_INITDB_DATABASE: dev
+      MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE}
       MONGO_INITDB_USERNAME: ${MONGO_INITDB_USERNAME}
       MONGO_INITDB_PASSWORD: ${MONGO_INITDB_PASSWORD}
     volumes:
       # - mongo:/data/db
       # - ./db-init/:/docker-entrypoint-initdb.d
-      - ./mongo/config/mongod.conf:/etc/mongod.conf
-      - ./mongo/config/initdb.d/:/docker-entrypoint-initdb.d/
-      - ./mongo/config/data/db/:/data/db/
-      - ./mongo/config/data/log/:/var/log/mongodb/
+      - ./.docker/mongodb/mongod.conf:/etc/mongod.conf
+      - ./.docker/mongodb/initdb.d/:/docker-entrypoint-initdb.d/
+      - ./.docker/mongodb/data/db/:/data/db/
+      - ./.docker/mongodb/data/log/:/var/log/mongodb/
     networks:
       internal:
     ports:
     - 27017:27017
     command: ["-f", "/etc/mongod.conf"]
-    # command: --wiredTigerCacheSizeGB 0.1
     build:
       context: ./mongo
       dockerfile: Dockerfile
@@ -104,3 +103,17 @@ services:
       internal:
     depends_on:
       - mongo
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: rabbitmq
+    volumes:
+        - ./.docker/rabbitmq/etc/:/etc/rabbitmq/
+        - ./.docker/rabbitmq/data/:/var/lib/rabbitmq/
+        - ./.docker/rabbitmq/logs/:/var/log/rabbitmq/
+    environment:
+        RABBITMQ_ERLANG_COOKIE: ${RABBITMQ_ERLANG_COOKIE}
+        RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+        RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+    ports:
+        - 5672:5672

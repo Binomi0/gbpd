@@ -8,6 +8,7 @@
     "build:mongo": "docker-compose build mongo",
     "build:front": "docker-compose build front",
     "build:back": "docker-compose build back",
+    "build:rabbit": "docker-compose build rabbitmq",
     "reset": "docker-compose down --rmi all",
     "restart": "npm stop && npm start",
     "start": "docker-compose up -d --force-recreate",
