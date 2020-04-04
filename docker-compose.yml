@@ -1,8 +1,7 @@
 version: "3.7"
 
 networks:
-  internal:
-    # name: gbpd
+  gbpd:
     driver: bridge
 
 volumes:
@@ -24,19 +23,18 @@ services:
       dockerfile: Dockerfile
       args:
         # MONGODB_URI: mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongo:27017,mongo2:27017,mongo3:27017/admin?replicaSet=${MONGO_REPLICA_SET_NAME}=true&w=majority
-        # MONGODB_URI: mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongo:27017/dev
         MONGODB_URI: mongodb://${MONGO_INITDB_USERNAME}:${MONGO_INITDB_PASSWORD}@mongo:27017/${MONGO_INITDB_DATABASE}
     # environment:
     #   MONGODB_URI: mongodb://internal:$MONGO_DB_ADMIN_PASSWORD@mongo:27017/dev
       # - ATLAS_HOST=mongodb://mongo:27017/dev
     networks:
-      internal:
+      gbpd:
     ports:
       - 3008:3008
-    links:
-      - mongo
-    depends_on:
-      - mongo
+    # links:
+    #   - mongo
+    # depends_on:
+    #   - mongo
 
   front:
     image: binomio/gbpd-front:dev
@@ -52,12 +50,10 @@ services:
       args:
         REACT_APP_API_URL: ${REACT_APP_API_URL}
     container_name: gbpd
-    # environment:
-    #   REACT_APP_API_URL: $REACT_APP_API_URL
     depends_on:
       - back
     networks:
-      internal:
+      gbpd:
     expose:
       - 3000
     ports:
@@ -69,6 +65,8 @@ services:
     container_name: mongo-express
     image: mongo-express
     restart: always
+    expose:
+      - 8081
     ports:
       - 8081:8081
     environment:
@@ -76,9 +74,9 @@ services:
       ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
       ME_CONFIG_MONGODB_ENABLE_ADMIN: "true"
     networks:
-      internal:
-    depends_on:
-      - mongo
+      gbpd:
+    # depends_on:
+    #   - mongo
 
   mongo:
     # hostname: mongo
@@ -86,12 +84,12 @@ services:
     image: binomio/mongo
 
     restart: always
-    # environment:
-    #   MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
-    #   MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
-    #   MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE}
-    #   MONGO_INITDB_USERNAME: ${MONGO_INITDB_USERNAME}
-    #   MONGO_INITDB_PASSWORD: ${MONGO_INITDB_PASSWORD}
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE}
+      MONGO_INITDB_USERNAME: ${MONGO_INITDB_USERNAME}
+      MONGO_INITDB_PASSWORD: ${MONGO_INITDB_PASSWORD}
     volumes:
       # - mongo:/data/db
       # - ./.docker/mongodb/initdb.d/:/docker-entrypoint-initdb.d/
@@ -101,25 +99,25 @@ services:
       - ./mongo/keys/:/mongo/keys/
       - ./mongo/scripts:/scripts
     networks:
-      internal:
+      gbpd:
     expose:
       - 27017
     ports:
     - 27017:27017
     command: ["-f", "/etc/mongod.conf"]
-    build:
-      context: ./mongo
-      dockerfile: Dockerfile
-      # args:
-        # MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
-        # MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
-        # MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE}
-        # MONGO_INITDB_USERNAME: ${MONGO_INITDB_USERNAME}
-        # MONGO_INITDB_PASSWORD: ${MONGO_INITDB_PASSWORD}
-    # healthcheck:
-    #   test: test $$(echo "rs.initiate().ok || rs.status().ok" | mongo -u $${MONGO_INITDB_ROOT_USERNAME} -p $${MONGO_INITDB_ROOT_PASSWORD} --quiet) -eq 1
-    #   interval: 10s
-    #   start_period: 30s
+    # build:
+    #   context: ./mongo
+    #   dockerfile: Dockerfile
+    #   args:
+    #     MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+    #     MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+    #     MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE}
+    #     MONGO_INITDB_USERNAME: ${MONGO_INITDB_USERNAME}
+    #     MONGO_INITDB_PASSWORD: ${MONGO_INITDB_PASSWORD}
+    healthcheck:
+      test: test $$(echo "rs.initiate().ok || rs.status().ok" | mongo -u $${MONGO_INITDB_ROOT_USERNAME} -p $${MONGO_INITDB_ROOT_PASSWORD} --quiet) -eq 1
+      interval: 10s
+      start_period: 30s
 
   # rabbitmq:
   #   image: rabbitmq:3-management-alpine

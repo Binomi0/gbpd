@@ -1,0 +1,24 @@
+apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
+kind: Deployment
+metadata:
+  name: gbpd-api
+spec:
+  selector:
+    matchLabels:
+      app: gbpd-api
+      tier: backend
+      track: stable
+  replicas: 3 # tells deployment to run 2 pods matching the template
+  template:
+    metadata:
+      labels:
+        app: gbpd-api
+        tier: backend
+        track: stable
+    spec:
+      containers:
+        - name: gbpd-api
+          image: binomio/gbpd-back:dev
+          ports:
+            - name: http
+              containerPort: 3008

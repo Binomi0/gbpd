@@ -1,0 +1,94 @@
+version: '2'
+services:
+
+  ## Config Servers
+  config01:
+    image: mongo
+    command: mongod --port 27017 --configsvr --replSet configserver --oplogSize 16
+    volumes:
+      - ./scripts:/scripts
+      - config01:/data/db
+  config02:
+    image: mongo
+    command: mongod --port 27017 --configsvr --replSet configserver --oplogSize 16
+    volumes:
+      - ./scripts:/scripts
+      - config02:/data/db
+  config03:
+    image: mongo
+    command: mongod --port 27017 --configsvr --replSet configserver --oplogSize 16
+    volumes:
+      - ./scripts:/scripts
+      - config03:/data/db
+
+  ## Shards
+  shard01a:
+    image: mongo
+    command: mongod --port 27018 --shardsvr --replSet shard01 --oplogSize 16
+    volumes:
+      - ./scripts:/scripts
+      - shard01a:/data/db
+  shard01b:
+    image: mongo
+    command: mongod --port 27018 --shardsvr --replSet shard01 --oplogSize 16
+    volumes:
+      - ./scripts:/scripts
+      - shard01b:/data/db
+  shard02a:
+    image: mongo
+    command: mongod --port 27019 --shardsvr --replSet shard02 --oplogSize 16
+    volumes:
+      - ./scripts:/scripts
+      - shard02a:/data/db
+  shard02b:
+    image: mongo
+    command: mongod --port 27019 --shardsvr --replSet shard02 --oplogSize 16
+    volumes:
+      - ./scripts:/scripts
+      - shard02b:/data/db
+  shard03a:
+    image: mongo
+    command: mongod --port 27020 --shardsvr --replSet shard03 --oplogSize 16
+    volumes:
+      - ./scripts:/scripts
+      - shard03a:/data/db
+  shard03b:
+    image: mongo
+    command: mongod --port 27020 --shardsvr --replSet shard03 --oplogSize 16
+    volumes:
+      - ./scripts:/scripts
+      - shard03b:/data/db
+
+  ## Router
+  router:
+    image: mongo
+    command: mongos --port 27017 --configdb configserver/config01:27017,config02:27017,config03:27017 --bind_ip_all
+    ports:
+      - "27017:27017"
+    expose:
+      - 27017
+    volumes:
+      - ./scripts:/scripts
+      - router:/data/db
+    depends_on:
+      - config01
+      - config02
+      - config03
+      - shard01a
+      - shard01b
+      - shard02a
+      - shard02b
+      - shard03a
+      - shard03b
+
+volumes:
+  router:
+  config01:
+  config02:
+  config03:
+  shard01a:
+  shard01b:
+  shard02a:
+  shard02b:
+  shard03a:
+  shard03b:

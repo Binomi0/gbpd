@@ -1,0 +1,29 @@
+apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
+kind: Deployment
+metadata:
+  name: gbpd-front
+spec:
+  selector:
+    matchLabels:
+      app: gbpd-api
+      tier: frontend
+      track: stable
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: gbpd-api
+        tier: frontend
+        track: stable
+    spec:
+      containers:
+        - name: react
+          image: binomio/gbpd-front:dev
+          env:
+            - name: REACT_APP_API_URL
+              value: gbpd-api
+
+          ports:
+            - containerPort: 3000
+          imagePullPolicy: Always
+
